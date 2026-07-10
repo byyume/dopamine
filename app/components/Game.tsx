@@ -71,6 +71,8 @@ export default function Game() {
   // 저장 데이터 불러오기 — localStorage는 클라이언트 마운트 후에만 접근 가능
   /* eslint-disable react-hooks/set-state-in-effect */
   useEffect(() => {
+    // 시작부터 추세가 보이도록 차트 히스토리를 미리 채움 (랜덤이라 클라이언트에서만)
+    setStocks(initStocks(30));
     try {
       const raw = localStorage.getItem(SAVE_KEY);
       if (raw) {
@@ -224,7 +226,7 @@ export default function Game() {
     if (resetTimer.current) clearTimeout(resetTimer.current);
     setResetArmed(false);
     setCash(START_CASH);
-    setStocks(initStocks());
+    setStocks(initStocks(30));
     setHoldings({});
     setLoans([]);
     setLoanSeq(0);

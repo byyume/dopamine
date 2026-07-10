@@ -43,7 +43,8 @@ function SymbolFace({ sym, size }: { sym: SlotSymbol; size: "cell" | "small" }) 
 }
 
 export default function SlotMachine({ cash, onNet }: Props) {
-  const [grid, setGrid] = useState<SlotSymbol[]>(() => Array(9).fill(SYMBOLS[7]));
+  // 첫 화면은 토끼(토키)로 가득 채움
+  const [grid, setGrid] = useState<SlotSymbol[]>(() => Array(9).fill(SYMBOLS[0]));
   const [spinningCols, setSpinningCols] = useState<boolean[]>([false, false, false]);
   const [mult, setMult] = useState<number>(1);
   const [winCells, setWinCells] = useState<Set<number>>(new Set());

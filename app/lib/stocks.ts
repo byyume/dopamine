@@ -28,13 +28,13 @@ export const RISK_LABEL: Record<number, string> = {
 export const STOCK_DEFS: StockDef[] = [
   { id: "wmp", name: "위메이드플레이", emoji: "🧩", risk: 1, basePrice: 20_000 },
   { id: "bank", name: "안정은행", emoji: "🏦", risk: 1, basePrice: 50_000 },
-  { id: "telecom", name: "국민통신", emoji: "📡", risk: 1, basePrice: 30_000 },
-  { id: "elec", name: "미믹전자", emoji: "🔌", risk: 2, basePrice: 80_000 },
+  { id: "telecom", name: "얜비디아", emoji: "🎮", risk: 1, basePrice: 30_000 },
+  { id: "elec", name: "사성전자", emoji: "📱", risk: 2, basePrice: 80_000 },
   { id: "potato", name: "감자농산", emoji: "🥔", risk: 2, basePrice: 5_000 },
   { id: "pharma", name: "도파민제약", emoji: "💊", risk: 3, basePrice: 120_000 },
-  { id: "games", name: "럭키게임즈", emoji: "🕹️", risk: 3, basePrice: 45_000 },
+  { id: "games", name: "스페이스S", emoji: "🛰️", risk: 3, basePrice: 45_000 },
   { id: "rocket", name: "로켓배송", emoji: "🚀", risk: 4, basePrice: 15_000 },
-  { id: "ent", name: "불꽃엔터", emoji: "🔥", risk: 4, basePrice: 60_000 },
+  { id: "ent", name: "로우닉스", emoji: "💾", risk: 4, basePrice: 60_000 },
   { id: "octopus", name: "문어발홀딩스", emoji: "🐙", risk: 5, basePrice: 8_000 },
   { id: "coin", name: "떡상코인", emoji: "🪙", risk: 5, basePrice: 1_000 },
 ];
@@ -53,14 +53,22 @@ function gaussian(): number {
   return Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * v);
 }
 
-export function initStocks(): StockState[] {
-  return STOCK_DEFS.map((def) => ({
-    def,
-    price: def.basePrice,
-    prevPrice: def.basePrice,
-    trend: (Math.random() - 0.5) * 0.6,
-    history: [def.basePrice],
-  }));
+// warmupTicks만큼 시세를 미리 진행시켜 시작부터 추세(상승/하락)가 보이는 차트를 만든다.
+// 주의: 랜덤이 들어가므로 warmup은 클라이언트에서만 사용할 것 (SSR 하이드레이션 불일치 방지)
+export function initStocks(warmupTicks = 0): StockState[] {
+  return STOCK_DEFS.map((def) => {
+    let s: StockState = {
+      def,
+      price: def.basePrice,
+      prevPrice: def.basePrice,
+      trend: warmupTicks > 0 ? (Math.random() - 0.5) * 0.6 : 0,
+      history: [def.basePrice],
+    };
+    for (let i = 0; i < warmupTicks; i++) {
+      s = tickStock(s).next;
+    }
+    return s;
+  });
 }
 
 export interface TickEvent {
