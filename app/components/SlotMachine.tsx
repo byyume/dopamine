@@ -38,7 +38,15 @@ function SymbolFace({ sym, size }: { sym: SlotSymbol; size: "cell" | "small" }) 
     );
   }
   return (
-    <span className={size === "cell" ? "text-4xl" : "text-sm"}>{sym.icon}</span>
+    <span
+      className={
+        size === "cell"
+          ? "text-4xl leading-none flex items-center justify-center"
+          : "text-sm leading-none"
+      }
+    >
+      {sym.icon}
+    </span>
   );
 }
 
