@@ -134,3 +134,17 @@ body::after {
 .reel-spinning {
   animation: reel-spin 0.18s linear infinite;
 }
+
+/* 슬롯머신 레버: 받침대(아래)를 축으로 회전하며 당겨졌다 돌아옴 */
+.lever-arm {
+  transform-origin: bottom center;
+}
+@keyframes lever-pull {
+  0% { transform: rotate(0deg); }
+  30% { transform: rotate(72deg); }
+  55% { transform: rotate(72deg); }
+  100% { transform: rotate(0deg); }
+}
+.lever-pulling {
+  animation: lever-pull 0.5s ease-in-out;
+}
