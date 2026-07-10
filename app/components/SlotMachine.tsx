@@ -264,21 +264,27 @@ export default function SlotMachine({ cash, onNet }: Props) {
         {message}
       </p>
 
-      <div className="flex-1 min-h-0 text-sm opacity-80">
-        <p className="text-gold mb-1">배당표 (라인: 가로 3 + 대각 2 · {mult}배 적용)</p>
-        <ul className="grid grid-cols-3 gap-x-4 gap-y-0.5 leading-5">
+      <div className="flex-1 min-h-0 text-[11px] opacity-80">
+        <p className="text-gold mb-1 text-xs">
+          배당표 (라인: 가로 3 + 대각 2 · {mult}배 적용)
+        </p>
+        <ul className="grid grid-cols-3 gap-x-3 gap-y-0.5 leading-4 tabular-nums">
           {SYMBOLS.map((s) => (
             <li key={s.id} className="flex justify-between items-center gap-1">
-              <span className="flex items-center gap-0.5">
+              <span className="flex items-center gap-0.5 shrink-0">
                 <SymbolFace sym={s} size="small" />
                 <span>x3</span>
               </span>
-              <span className="text-gain">{won(s.linePayout * mult)}</span>
+              <span className="text-gain whitespace-nowrap">
+                {won(s.linePayout * mult)}
+              </span>
             </li>
           ))}
           <li className="flex justify-between items-center gap-1">
-            <span>🍒x2</span>
-            <span className="text-gain">{won(CHERRY_PAIR_PAYOUT * mult)}</span>
+            <span className="shrink-0">🍒x2</span>
+            <span className="text-gain whitespace-nowrap">
+              {won(CHERRY_PAIR_PAYOUT * mult)}
+            </span>
           </li>
         </ul>
       </div>
