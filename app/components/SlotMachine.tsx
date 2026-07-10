@@ -33,12 +33,12 @@ function SymbolFace({ sym, size }: { sym: SlotSymbol; size: "cell" | "small" }) 
   if (sym.id === "toki") {
     return (
       <TokiSprite
-        className={size === "cell" ? "w-11 h-10" : "w-4 h-3.5 inline-block"}
+        className={size === "cell" ? "w-12 h-11" : "w-5 h-4 inline-block"}
       />
     );
   }
   return (
-    <span className={size === "cell" ? "text-3xl" : "text-[10px]"}>{sym.icon}</span>
+    <span className={size === "cell" ? "text-4xl" : "text-sm"}>{sym.icon}</span>
   );
 }
 
@@ -150,77 +150,83 @@ export default function SlotMachine({ cash, onNet }: Props) {
         shaking ? "shake" : ""
       }`}
     >
-      <h2 className="text-base font-bold text-gold text-center tracking-widest shrink-0">
+      <h2 className="text-lg font-bold text-gold text-center tracking-widest shrink-0">
         🎰 애니팜팜 슬롯 🎰
       </h2>
 
-      <div className="relative shrink-0">
-        <div className="pixel-inset grid grid-cols-3 gap-1.5 p-2 w-fit mx-auto">
-          {grid.map((sym, i) => (
-            <div
-              key={i}
-              className={`w-16 h-16 flex items-center justify-center bg-black/40 pixel-inset overflow-hidden ${
-                !busy && winCells.has(i) ? "win-cell" : ""
-              }`}
-              aria-label={spinningCols[i % 3] ? "회전 중" : sym.name}
-            >
-              <span
-                className={spinningCols[i % 3] ? "reel-spinning inline-flex" : "inline-flex"}
+      {/* 슬롯 그리드(좌) + 배율 버튼(우) — 배율을 오른쪽으로 올려 아래 배당표 공간 확보 */}
+      <div className="flex items-center justify-center gap-3 shrink-0">
+        <div className="relative">
+          <div className="pixel-inset grid grid-cols-3 gap-1.5 p-2 w-fit">
+            {grid.map((sym, i) => (
+              <div
+                key={i}
+                className={`w-16 h-16 flex items-center justify-center bg-black/40 pixel-inset overflow-hidden ${
+                  !busy && winCells.has(i) ? "win-cell" : ""
+                }`}
+                aria-label={spinningCols[i % 3] ? "회전 중" : sym.name}
               >
-                <SymbolFace sym={sym} size="cell" />
-              </span>
-            </div>
+                <span
+                  className={spinningCols[i % 3] ? "reel-spinning inline-flex" : "inline-flex"}
+                >
+                  <SymbolFace sym={sym} size="cell" />
+                </span>
+              </div>
+            ))}
+          </div>
+          {floaters.map((f) => (
+            <span
+              key={f.id}
+              className={`float-up absolute left-1/2 -translate-x-1/2 top-2 text-2xl font-bold ${
+                f.gain ? "text-gain" : "text-loss"
+              }`}
+            >
+              {f.text}
+            </span>
           ))}
         </div>
-        {floaters.map((f) => (
-          <span
-            key={f.id}
-            className={`float-up absolute left-1/2 -translate-x-1/2 top-2 text-xl font-bold ${
-              f.gain ? "text-gain" : "text-loss"
-            }`}
-          >
-            {f.text}
-          </span>
-        ))}
+
+        <div className="flex flex-col gap-1.5 shrink-0">
+          <span className="text-xs text-gold text-center tracking-wider">배팅 배율</span>
+          <div className="grid grid-cols-2 gap-1.5">
+            {BET_MULTIPLIERS.map((m) => (
+              <button
+                key={m}
+                onClick={() => setMult(m)}
+                disabled={busy}
+                className={`pixel-btn font-bold px-3 py-1.5 text-sm cursor-pointer ${
+                  mult === m ? "bg-gold text-black" : "bg-panel-dark"
+                }`}
+              >
+                {m}배
+              </button>
+            ))}
+          </div>
+        </div>
       </div>
 
       <p
-        className={`text-center min-h-6 text-sm shrink-0 ${
-          jackpot ? "jackpot-blink text-lg font-bold" : "text-info"
+        className={`text-center min-h-6 text-base shrink-0 ${
+          jackpot ? "jackpot-blink text-xl font-bold" : "text-info"
         }`}
       >
         {message}
       </p>
 
-      <div className="flex justify-center gap-2 shrink-0">
-        {BET_MULTIPLIERS.map((m) => (
-          <button
-            key={m}
-            onClick={() => setMult(m)}
-            disabled={busy}
-            className={`pixel-btn font-bold px-3 py-1 text-sm cursor-pointer ${
-              mult === m ? "bg-gold text-black" : "bg-panel-dark"
-            }`}
-          >
-            {m}배
-          </button>
-        ))}
-      </div>
-
       <button
         onClick={handleSpin}
         disabled={busy || cash < cost}
-        className="pixel-btn bg-loss text-white font-bold text-lg py-2 px-6 mx-auto w-64 shrink-0 cursor-pointer"
+        className="pixel-btn bg-loss text-white font-bold text-xl py-2.5 px-6 mx-auto w-72 shrink-0 cursor-pointer"
       >
         {busy ? "두근두근..." : `스핀! (${won(cost)})`}
       </button>
 
-      <div className="flex-1 min-h-0 overflow-hidden text-[11px] opacity-80">
-        <p className="text-gold">배당표 (라인: 가로 3 + 대각 2 · {mult}배 적용)</p>
-        <ul className="grid grid-cols-3 gap-x-3 leading-4">
+      <div className="flex-1 min-h-0 overflow-y-auto text-sm opacity-80">
+        <p className="text-gold mb-1">배당표 (라인: 가로 3 + 대각 2 · {mult}배 적용)</p>
+        <ul className="grid grid-cols-3 gap-x-4 gap-y-0.5 leading-5">
           {SYMBOLS.map((s) => (
             <li key={s.id} className="flex justify-between items-center gap-1">
-              <span className="flex items-center">
+              <span className="flex items-center gap-0.5">
                 <SymbolFace sym={s} size="small" />
                 <span>x3</span>
               </span>

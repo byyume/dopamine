@@ -9,6 +9,7 @@ import {
 } from "react";
 import SlotMachine from "./SlotMachine";
 import StockMarket, { Holding } from "./StockMarket";
+import RankingPanel from "./RankingPanel";
 import LoanPanel, { Loan, LOAN_AMOUNT, INTEREST_TICK_MS } from "./LoanPanel";
 import {
   initStocks,
@@ -20,7 +21,8 @@ import {
   STOCK_TICK_MS,
   STOCK_DEFS,
 } from "../lib/stocks";
-import { won, signedWon } from "../lib/format";
+import { won, signedWon, compactWon } from "../lib/format";
+import { randomName } from "../lib/players";
 import { sfx, setMuted } from "../lib/sound";
 
 const START_CASH = 300_000;
@@ -50,6 +52,7 @@ interface SaveData {
   loans: Loan[];
   loanSeq: number;
   stocks?: SavedStock[]; // 시세도 저장해 다시 켰을 때 그래프가 이어짐
+  playerName?: string; // 랭킹에 표시할 내 닉네임
 }
 
 export default function Game() {
@@ -63,6 +66,8 @@ export default function Game() {
   const [muted, setMutedState] = useState(false);
   const [loaded, setLoaded] = useState(false);
   const [resetArmed, setResetArmed] = useState(false);
+  const [playerName, setPlayerName] = useState("플레이어");
+  const [leftTab, setLeftTab] = useState<"slot" | "rank">("slot");
   const logId = useRef(0);
   const resetTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -84,10 +89,14 @@ export default function Game() {
         setHoldings(save.holdings ?? {});
         setLoans(save.loans ?? []);
         setLoanSeq(save.loanSeq ?? 0);
+        setPlayerName(save.playerName ?? randomName());
         restoredStocks = restoreStocks(save.stocks); // 이전 세션 그래프 복원
+      } else {
+        setPlayerName(randomName()); // 첫 방문: 랜덤 닉네임 부여
       }
     } catch {
       // 저장 데이터가 깨졌으면 새 게임
+      setPlayerName(randomName());
     }
     // 복원할 시세가 없으면 시작부터 추세가 보이도록 워밍업 (랜덤이라 클라이언트에서만)
     setStocks(restoredStocks ?? initStocks(30));
@@ -104,13 +113,14 @@ export default function Game() {
       loans,
       loanSeq,
       stocks: serializeStocks(stocks),
+      playerName,
     };
     try {
       localStorage.setItem(SAVE_KEY, JSON.stringify(save));
     } catch {
       // 저장 실패는 무시
     }
-  }, [cash, holdings, loans, loanSeq, stocks, loaded]);
+  }, [cash, holdings, loans, loanSeq, stocks, playerName, loaded]);
 
   // 주가 갱신 (10초) — updater 밖에서 틱을 계산해 사이드이펙트(로그/사운드)를 분리
   const stocksRef = useRef(stocks);
@@ -254,6 +264,7 @@ export default function Game() {
       loans,
       loanSeq,
       stocks: serializeStocks(stocks),
+      playerName,
     };
     try {
       localStorage.setItem(SAVE_KEY, JSON.stringify(save));
@@ -290,47 +301,53 @@ export default function Game() {
         }}
       >
         {/* 상단 바 */}
-        <header className="pixel-panel px-4 py-2 flex items-center justify-between gap-3 shrink-0">
-          <h1 className="text-xl font-bold text-gold tracking-widest whitespace-nowrap">
-            💰 한탕월드
+        <header className="pixel-panel px-4 py-2.5 flex items-center justify-between gap-3 shrink-0">
+          <h1 className="text-2xl font-bold text-gold tracking-widest whitespace-nowrap">
+            💰 도파민 한탕월드
           </h1>
-          <div className="flex gap-x-5 text-sm whitespace-nowrap">
+          <div className="flex gap-x-5 text-base whitespace-nowrap">
             <span>
-              💰 현금: <b className="text-gold">{won(cash)}</b>
+              💰 현금:{" "}
+              <b className="text-gold" title={won(cash)}>
+                {compactWon(cash)}
+              </b>
             </span>
             <span>
-              📊 주식: <b className="text-info">{won(stockValue)}</b>
+              📊 주식:{" "}
+              <b className="text-info" title={won(stockValue)}>
+                {compactWon(stockValue)}
+              </b>
             </span>
             <span>
               🏚️ 부채:{" "}
-              <b className={totalDebt > 0 ? "text-loss" : "text-gain"}>
-                {won(totalDebt)}
+              <b className={totalDebt > 0 ? "text-loss" : "text-gain"} title={won(totalDebt)}>
+                {compactWon(totalDebt)}
               </b>
             </span>
             <span>
               👑 순자산:{" "}
-              <b className={netWorth >= 0 ? "text-gain" : "text-loss"}>
-                {won(netWorth)}
+              <b className={netWorth >= 0 ? "text-gain" : "text-loss"} title={won(netWorth)}>
+                {compactWon(netWorth)}
               </b>
             </span>
           </div>
           <div className="flex gap-2 shrink-0">
             <button
               onClick={saveNow}
-              className="pixel-btn bg-panel-dark px-3 py-1 cursor-pointer"
+              className="pixel-btn bg-panel-dark px-3 py-1.5 text-sm cursor-pointer"
             >
               💾 저장
             </button>
             <button
               onClick={toggleMute}
-              className="pixel-btn bg-panel-dark px-3 py-1 cursor-pointer"
+              className="pixel-btn bg-panel-dark px-3 py-1.5 text-sm cursor-pointer"
               aria-label={muted ? "소리 켜기" : "소리 끄기"}
             >
               {muted ? "🔇" : "🔊"}
             </button>
             <button
               onClick={handleReset}
-              className={`pixel-btn px-3 py-1 cursor-pointer ${
+              className={`pixel-btn px-3 py-1.5 text-sm cursor-pointer ${
                 resetArmed ? "bg-loss text-white font-bold" : "bg-panel-dark"
               }`}
             >
@@ -339,10 +356,37 @@ export default function Game() {
           </div>
         </header>
 
-        {/* 본문: 슬롯(좌) / 주식(우) */}
-        <div className="flex-1 min-h-0 grid grid-cols-[460px_1fr] gap-2">
+        {/* 본문: 슬롯/랭킹(좌) / 주식(우) */}
+        <div className="flex-1 min-h-0 grid grid-cols-[470px_1fr] gap-2">
           <div className="flex flex-col gap-2 min-h-0">
-            <SlotMachine cash={cash} onNet={handleSlotNet} />
+            {/* 슬롯 ↔ 랭킹 탭 */}
+            <div className="flex gap-2 shrink-0">
+              <button
+                onClick={() => setLeftTab("slot")}
+                className={`pixel-btn flex-1 px-3 py-1.5 text-sm font-bold cursor-pointer ${
+                  leftTab === "slot" ? "bg-gold text-black" : "bg-panel-dark"
+                }`}
+              >
+                🎰 슬롯머신
+              </button>
+              <button
+                onClick={() => setLeftTab("rank")}
+                className={`pixel-btn flex-1 px-3 py-1.5 text-sm font-bold cursor-pointer ${
+                  leftTab === "rank" ? "bg-gold text-black" : "bg-panel-dark"
+                }`}
+              >
+                🏆 랭킹
+              </button>
+            </div>
+            {leftTab === "slot" ? (
+              <SlotMachine cash={cash} onNet={handleSlotNet} />
+            ) : (
+              <RankingPanel
+                myNetWorth={netWorth}
+                playerName={playerName}
+                onRename={setPlayerName}
+              />
+            )}
             <LoanPanel
               loans={loans}
               nextRate={nextRate}
@@ -362,9 +406,9 @@ export default function Game() {
               onBuy={buy}
               onSell={sell}
             />
-            <section className="pixel-panel px-3 py-2 h-24 shrink-0 flex flex-col">
-              <h2 className="text-sm font-bold tracking-widest shrink-0">📰 속보</h2>
-              <ul className="flex-1 min-h-0 overflow-hidden text-xs flex flex-col gap-0.5">
+            <section className="pixel-panel px-3 py-2 h-28 shrink-0 flex flex-col">
+              <h2 className="text-base font-bold tracking-widest shrink-0">📰 속보</h2>
+              <ul className="flex-1 min-h-0 overflow-hidden text-sm flex flex-col gap-0.5">
                 {log.length === 0 && (
                   <li className="opacity-50">아직 소식이 없습니다...</li>
                 )}
@@ -383,7 +427,7 @@ export default function Game() {
                   </li>
                 ))}
               </ul>
-              <p className="text-[10px] opacity-40 shrink-0">
+              <p className="text-xs opacity-40 shrink-0">
                 본 게임은 가상 화폐로만 진행되며 실제 도박·투자와 무관합니다.
               </p>
             </section>
