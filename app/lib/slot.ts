@@ -11,7 +11,7 @@ export interface SlotSymbol {
 
 // 가중치가 낮을수록 희귀한 심볼
 export const SYMBOLS: SlotSymbol[] = [
-  { id: "anipang", icon: "", name: "애니팡", weight: 1, linePayout: 30_000 },
+  { id: "toki", icon: "", name: "토키", weight: 1, linePayout: 30_000 },
   { id: "seven", icon: "7️⃣", name: "세븐", weight: 2, linePayout: 7_700 },
   { id: "diamond", icon: "💎", name: "다이아", weight: 3, linePayout: 3_000 },
   { id: "star", icon: "⭐", name: "스타", weight: 5, linePayout: 1_200 },
@@ -65,7 +65,7 @@ export function spin(): SpinResult {
     const [a, b, c] = cells.map((i) => grid[i]);
     if (a.id === b.id && b.id === c.id) {
       wins.push({ cells, payout: a.linePayout, label: `${a.name} 트리플` });
-      if (a.id === "anipang" || a.id === "seven") isJackpot = true;
+      if (a.id === "toki" || a.id === "seven") isJackpot = true;
     } else if ([a, b, c].filter((s) => s.id === "cherry").length === 2) {
       wins.push({ cells, payout: CHERRY_PAIR_PAYOUT, label: "체리 페어" });
     }

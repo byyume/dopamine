@@ -20,8 +20,8 @@ import {
 import { won, signedWon } from "../lib/format";
 import { sfx, setMuted } from "../lib/sound";
 
-const START_CASH = 10_000;
-const SAVE_KEY = "dopamine-save-v1";
+const START_CASH = 300_000;
+const SAVE_KEY = "dopamine-save-v2";
 
 // 16:9 기준 논리 해상도 — iframe 크기에 맞춰 통째로 scale 됨
 const STAGE_W = 1280;
@@ -232,6 +232,18 @@ export default function Game() {
     addLog("🔄 새 인생 시작! 이번엔 부자가 되어보자", "info");
   }
 
+  // 자동 저장 외에 버튼으로 즉시 저장 (저장 여부를 눈으로 확인 가능)
+  function saveNow() {
+    const save: SaveData = { cash, holdings, loans, loanSeq };
+    try {
+      localStorage.setItem(SAVE_KEY, JSON.stringify(save));
+      addLog("💾 저장 완료! (자동 저장도 항상 켜져 있어요)", "info");
+      sfx.buy();
+    } catch {
+      addLog("💾 저장 실패 — 브라우저 개인정보 설정을 확인하세요", "loss");
+    }
+  }
+
   function toggleMute() {
     setMutedState((m) => {
       setMuted(!m);
@@ -283,6 +295,12 @@ export default function Game() {
             </span>
           </div>
           <div className="flex gap-2 shrink-0">
+            <button
+              onClick={saveNow}
+              className="pixel-btn bg-panel-dark px-3 py-1 cursor-pointer"
+            >
+              💾 저장
+            </button>
             <button
               onClick={toggleMute}
               className="pixel-btn bg-panel-dark px-3 py-1 cursor-pointer"

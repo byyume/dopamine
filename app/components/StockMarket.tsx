@@ -48,11 +48,31 @@ export default function StockMarket({
   const maxBuy = Math.floor(cash / selected.price);
   const profit = holding ? (selected.price - holding.avgPrice) * holding.qty : 0;
 
+  // 포트폴리오 전체 수익 현황
+  let totalValue = 0;
+  let totalInvested = 0;
+  for (const [id, h] of Object.entries(holdings)) {
+    const s = stocks.find((x) => x.def.id === id);
+    if (!s) continue;
+    totalValue += s.price * h.qty;
+    totalInvested += h.avgPrice * h.qty;
+  }
+  const totalProfit = totalValue - totalInvested;
+  const totalRate = totalInvested > 0 ? (totalProfit / totalInvested) * 100 : 0;
+
   return (
     <section className="pixel-panel p-3 flex-1 min-h-0 flex flex-col gap-2">
-      <h2 className="text-base font-bold text-info text-center tracking-widest shrink-0">
-        📈 도파민 증권거래소 📉
-      </h2>
+      <div className="flex items-center justify-between shrink-0">
+        <h2 className="text-base font-bold text-info tracking-widest">
+          📈 도파민 증권거래소 📉
+        </h2>
+        <p className="text-xs whitespace-nowrap">
+          내 주식 <b className="text-info">{won(totalValue)}</b> · 수익{" "}
+          <b className={totalProfit >= 0 ? "text-gain" : "text-loss"}>
+            {signedWon(totalProfit)} ({pct(totalRate)})
+          </b>
+        </p>
+      </div>
 
       <div className="flex-1 min-h-0 flex gap-2">
         {/* 종목 리스트 (내부 스크롤) */}

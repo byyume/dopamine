@@ -13,7 +13,7 @@ import {
 } from "../lib/slot";
 import { won, signedWon } from "../lib/format";
 import { sfx } from "../lib/sound";
-import AnipangSprite from "./AnipangSprite";
+import TokiSprite from "./TokiSprite";
 
 interface Props {
   cash: number;
@@ -30,10 +30,10 @@ const COL_STOP_BASE_MS = 600;
 const COL_STOP_GAP_MS = 450;
 
 function SymbolFace({ sym, size }: { sym: SlotSymbol; size: "cell" | "small" }) {
-  if (sym.id === "anipang") {
+  if (sym.id === "toki") {
     return (
-      <AnipangSprite
-        className={size === "cell" ? "w-10 h-9" : "w-4 h-3.5 inline-block"}
+      <TokiSprite
+        className={size === "cell" ? "w-11 h-9" : "w-4 h-3 inline-block"}
       />
     );
   }
@@ -150,7 +150,7 @@ export default function SlotMachine({ cash, onNet }: Props) {
       }`}
     >
       <h2 className="text-base font-bold text-gold text-center tracking-widest shrink-0">
-        🎰 애니팡 도파민 슬롯 🎰
+        🎰 토키 도파민 슬롯 🎰
       </h2>
 
       <div className="relative shrink-0">
