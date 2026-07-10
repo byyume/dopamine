@@ -26,16 +26,16 @@ export const RISK_LABEL: Record<number, string> = {
 };
 
 export const STOCK_DEFS: StockDef[] = [
-  { id: "wmp", name: "위메이드플레이", emoji: "🧩", risk: 1, basePrice: 20_000 },
-  { id: "bank", name: "아마종", emoji: "🏦", risk: 1, basePrice: 50_000 },
-  { id: "telecom", name: "얜비디아", emoji: "🎮", risk: 1, basePrice: 30_000 },
+  { id: "wmp", name: "위메이드플레이", emoji: "🐰", risk: 1, basePrice: 20_000 },
+  { id: "bank", name: "아마종", emoji: "📦", risk: 1, basePrice: 50_000 },
+  { id: "telecom", name: "얜비디아", emoji: "🖥️", risk: 1, basePrice: 30_000 },
   { id: "elec", name: "사성전자", emoji: "📱", risk: 2, basePrice: 80_000 },
-  { id: "potato", name: "위믹스", emoji: "🥔", risk: 2, basePrice: 5_000 },
+  { id: "potato", name: "위믹스", emoji: "🎮", risk: 2, basePrice: 5_000 },
   { id: "pharma", name: "셀린디옹", emoji: "💊", risk: 3, basePrice: 120_000 },
-  { id: "games", name: "스페이스S", emoji: "🛰️", risk: 3, basePrice: 45_000 },
-  { id: "rocket", name: "파인애플", emoji: "🚀", risk: 4, basePrice: 15_000 },
+  { id: "games", name: "스페이스S", emoji: "🚀", risk: 3, basePrice: 45_000 },
+  { id: "rocket", name: "파인애플", emoji: "🍎", risk: 4, basePrice: 15_000 },
   { id: "ent", name: "로우닉스", emoji: "💾", risk: 4, basePrice: 60_000 },
-  { id: "octopus", name: "이더리옴", emoji: "🐙", risk: 5, basePrice: 8_000 },
+  { id: "octopus", name: "이더리옴", emoji: "💎", risk: 5, basePrice: 8_000 },
   { id: "coin", name: "기가코인", emoji: "🪙", risk: 5, basePrice: 1_000 },
 ];
 

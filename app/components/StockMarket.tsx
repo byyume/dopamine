@@ -1,9 +1,16 @@
 "use client";
 
 import { useState } from "react";
-import { StockState, RISK_LABEL } from "../lib/stocks";
+import { StockState, StockDef, RISK_LABEL } from "../lib/stocks";
 import { won, pct, signedWon, compactWon, compactSignedWon } from "../lib/format";
 import StockChart from "./StockChart";
+import TokiSprite from "./TokiSprite";
+
+// 위메이드플레이(애니팡 토키 제작사)는 게임 마스코트 도트 스프라이트로 표시
+function StockIcon({ def, sprite }: { def: StockDef; sprite: string }) {
+  if (def.id === "wmp") return <TokiSprite className={sprite} />;
+  return <>{def.emoji}</>;
+}
 
 export interface Holding {
   qty: number;
@@ -127,7 +134,9 @@ export default function StockMarket({
                     s.def.id === selected.def.id ? "bg-white/10" : "hover:bg-white/5"
                   }`}
                 >
-                  <span className="text-xl shrink-0">{s.def.emoji}</span>
+                  <span className="text-xl shrink-0 w-7 flex items-center justify-center">
+                    <StockIcon def={s.def} sprite="w-6 h-5" />
+                  </span>
                   <span className="flex-1 min-w-0 text-sm">
                     <span className="block whitespace-nowrap">{s.def.name}</span>
                     <span className={`text-xs ${RISK_COLOR[s.def.risk]}`}>
@@ -167,9 +176,10 @@ export default function StockMarket({
         {/* 선택 종목 상세 + 거래 */}
         <div className="flex-1 min-w-0 flex flex-col gap-1.5">
           <div className="flex items-baseline justify-between shrink-0 gap-2">
-            <h3 className="text-base font-bold whitespace-nowrap">
-              {selected.def.emoji} {selected.def.name}
-              <span className={`ml-1 text-xs ${RISK_COLOR[selected.def.risk]}`}>
+            <h3 className="text-base font-bold whitespace-nowrap flex items-center gap-1">
+              <StockIcon def={selected.def} sprite="w-6 h-5 inline-block" />
+              {selected.def.name}
+              <span className={`text-xs ${RISK_COLOR[selected.def.risk]}`}>
                 [{RISK_LABEL[selected.def.risk]}]
               </span>
             </h3>

@@ -154,8 +154,8 @@ export default function SlotMachine({ cash, onNet }: Props) {
         🎰 애니팜팜 슬롯 🎰
       </h2>
 
-      {/* 슬롯 그리드(좌) + 배율 버튼(우) — 배율을 오른쪽으로 올려 아래 배당표 공간 확보 */}
-      <div className="flex items-center justify-center gap-3 shrink-0">
+      {/* 슬롯 그리드는 패널 중앙, 배율 버튼은 오른쪽에 세로로 배치 */}
+      <div className="relative flex justify-center shrink-0">
         <div className="relative">
           <div className="pixel-inset grid grid-cols-3 gap-1.5 p-2 w-fit">
             {grid.map((sym, i) => (
@@ -186,22 +186,19 @@ export default function SlotMachine({ cash, onNet }: Props) {
           ))}
         </div>
 
-        <div className="flex flex-col gap-1.5 shrink-0">
-          <span className="text-xs text-gold text-center tracking-wider">배팅 배율</span>
-          <div className="grid grid-cols-2 gap-1.5">
-            {BET_MULTIPLIERS.map((m) => (
-              <button
-                key={m}
-                onClick={() => setMult(m)}
-                disabled={busy}
-                className={`pixel-btn font-bold px-3 py-1.5 text-sm cursor-pointer ${
-                  mult === m ? "bg-gold text-black" : "bg-panel-dark"
-                }`}
-              >
-                {m}배
-              </button>
-            ))}
-          </div>
+        <div className="absolute right-0 top-1/2 -translate-y-1/2 flex flex-col gap-1 w-16">
+          {BET_MULTIPLIERS.map((m) => (
+            <button
+              key={m}
+              onClick={() => setMult(m)}
+              disabled={busy}
+              className={`pixel-btn font-bold px-1 py-1 text-xs cursor-pointer ${
+                mult === m ? "bg-gold text-black" : "bg-panel-dark"
+              }`}
+            >
+              {m}배
+            </button>
+          ))}
         </div>
       </div>
 
