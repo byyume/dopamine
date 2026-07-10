@@ -13,7 +13,10 @@ import LoanPanel, { Loan, LOAN_AMOUNT, INTEREST_TICK_MS } from "./LoanPanel";
 import {
   initStocks,
   tickStock,
+  serializeStocks,
+  restoreStocks,
   StockState,
+  SavedStock,
   STOCK_TICK_MS,
   STOCK_DEFS,
 } from "../lib/stocks";
@@ -46,6 +49,7 @@ interface SaveData {
   holdings: Record<string, Holding>;
   loans: Loan[];
   loanSeq: number;
+  stocks?: SavedStock[]; // 시세도 저장해 다시 켰을 때 그래프가 이어짐
 }
 
 export default function Game() {
@@ -71,8 +75,7 @@ export default function Game() {
   // 저장 데이터 불러오기 — localStorage는 클라이언트 마운트 후에만 접근 가능
   /* eslint-disable react-hooks/set-state-in-effect */
   useEffect(() => {
-    // 시작부터 추세가 보이도록 차트 히스토리를 미리 채움 (랜덤이라 클라이언트에서만)
-    setStocks(initStocks(30));
+    let restoredStocks: StockState[] | null = null;
     try {
       const raw = localStorage.getItem(SAVE_KEY);
       if (raw) {
@@ -81,24 +84,33 @@ export default function Game() {
         setHoldings(save.holdings ?? {});
         setLoans(save.loans ?? []);
         setLoanSeq(save.loanSeq ?? 0);
+        restoredStocks = restoreStocks(save.stocks); // 이전 세션 그래프 복원
       }
     } catch {
       // 저장 데이터가 깨졌으면 새 게임
     }
+    // 복원할 시세가 없으면 시작부터 추세가 보이도록 워밍업 (랜덤이라 클라이언트에서만)
+    setStocks(restoredStocks ?? initStocks(30));
     setLoaded(true);
   }, []);
   /* eslint-enable react-hooks/set-state-in-effect */
 
-  // 자동 저장
+  // 자동 저장 (시세 변동 포함 — 다시 켰을 때 그래프가 이어지도록)
   useEffect(() => {
     if (!loaded) return;
-    const save: SaveData = { cash, holdings, loans, loanSeq };
+    const save: SaveData = {
+      cash,
+      holdings,
+      loans,
+      loanSeq,
+      stocks: serializeStocks(stocks),
+    };
     try {
       localStorage.setItem(SAVE_KEY, JSON.stringify(save));
     } catch {
       // 저장 실패는 무시
     }
-  }, [cash, holdings, loans, loanSeq, loaded]);
+  }, [cash, holdings, loans, loanSeq, stocks, loaded]);
 
   // 주가 갱신 (10초) — updater 밖에서 틱을 계산해 사이드이펙트(로그/사운드)를 분리
   const stocksRef = useRef(stocks);
@@ -236,7 +248,13 @@ export default function Game() {
 
   // 자동 저장 외에 버튼으로 즉시 저장 (저장 여부를 눈으로 확인 가능)
   function saveNow() {
-    const save: SaveData = { cash, holdings, loans, loanSeq };
+    const save: SaveData = {
+      cash,
+      holdings,
+      loans,
+      loanSeq,
+      stocks: serializeStocks(stocks),
+    };
     try {
       localStorage.setItem(SAVE_KEY, JSON.stringify(save));
       addLog("💾 저장 완료! (자동 저장도 항상 켜져 있어요)", "info");

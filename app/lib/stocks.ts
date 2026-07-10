@@ -55,19 +55,62 @@ function gaussian(): number {
 
 // warmupTicks만큼 시세를 미리 진행시켜 시작부터 추세(상승/하락)가 보이는 차트를 만든다.
 // 주의: 랜덤이 들어가므로 warmup은 클라이언트에서만 사용할 것 (SSR 하이드레이션 불일치 방지)
+function initStock(def: StockDef, warmupTicks: number): StockState {
+  let s: StockState = {
+    def,
+    price: def.basePrice,
+    prevPrice: def.basePrice,
+    trend: warmupTicks > 0 ? (Math.random() - 0.5) * 0.6 : 0,
+    history: [def.basePrice],
+  };
+  for (let i = 0; i < warmupTicks; i++) {
+    s = tickStock(s).next;
+  }
+  return s;
+}
+
 export function initStocks(warmupTicks = 0): StockState[] {
+  return STOCK_DEFS.map((def) => initStock(def, warmupTicks));
+}
+
+// 저장/복원용 직렬화 형태
+export interface SavedStock {
+  id: string;
+  price: number;
+  trend: number;
+  history: number[];
+}
+
+export function serializeStocks(stocks: StockState[]): SavedStock[] {
+  return stocks.map((s) => ({
+    id: s.def.id,
+    price: s.price,
+    trend: s.trend,
+    history: s.history,
+  }));
+}
+
+// 저장된 시세를 복원. 저장에 없던 신규 종목은 새로 워밍업해서 채운다.
+export function restoreStocks(saved: SavedStock[] | undefined): StockState[] | null {
+  if (!saved || saved.length === 0) return null;
+  const byId = new Map(saved.map((s) => [s.id, s]));
   return STOCK_DEFS.map((def) => {
-    let s: StockState = {
-      def,
-      price: def.basePrice,
-      prevPrice: def.basePrice,
-      trend: warmupTicks > 0 ? (Math.random() - 0.5) * 0.6 : 0,
-      history: [def.basePrice],
-    };
-    for (let i = 0; i < warmupTicks; i++) {
-      s = tickStock(s).next;
+    const s = byId.get(def.id);
+    if (
+      s &&
+      typeof s.price === "number" &&
+      Array.isArray(s.history) &&
+      s.history.length > 0
+    ) {
+      return {
+        def,
+        price: s.price,
+        prevPrice: s.price,
+        trend: typeof s.trend === "number" ? s.trend : 0,
+        history: s.history.slice(-HISTORY_LEN),
+      };
     }
-    return s;
+    return initStock(def, 30);
   });
 }
 
