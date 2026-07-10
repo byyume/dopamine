@@ -11,7 +11,7 @@ const galmuri = localFont({
 });
 
 export const metadata: Metadata = {
-  title: "도파민 뿜뿜 카지노",
+  title: "한탕월드",
   description: "슬롯머신과 주식으로 인생역전! 도트 감성 도파민 게임",
 };
 

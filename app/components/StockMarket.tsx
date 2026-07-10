@@ -112,11 +112,13 @@ export default function StockMarket({
             const ch =
               s.prevPrice > 0 ? ((s.price - s.prevPrice) / s.prevPrice) * 100 : 0;
             const h = holdings[s.def.id];
-            // 보유 종목이면 내 평단 대비 수익률 표시
+            // 보유 종목이면 내 평단 대비 수익률/수익금 표시
             const myRate =
               h && h.qty > 0 && h.avgPrice > 0
                 ? ((s.price - h.avgPrice) / h.avgPrice) * 100
                 : null;
+            const myProfit =
+              h && h.qty > 0 ? (s.price - h.avgPrice) * h.qty : 0;
             return (
               <li key={s.def.id}>
                 <button
@@ -148,7 +150,7 @@ export default function StockMarket({
                           myRate >= 0 ? "text-gain" : "text-loss"
                         }`}
                       >
-                        내 수익 {pct(myRate)}
+                        내 수익 {signedWon(myProfit)} ({pct(myRate)})
                       </span>
                     )}
                   </span>

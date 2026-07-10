@@ -77,6 +77,7 @@ export function initStocks(warmupTicks = 0): StockState[] {
 export interface SavedStock {
   id: string;
   price: number;
+  prevPrice?: number; // 등락률 표시용 직전 가격
   trend: number;
   history: number[];
 }
@@ -85,6 +86,7 @@ export function serializeStocks(stocks: StockState[]): SavedStock[] {
   return stocks.map((s) => ({
     id: s.def.id,
     price: s.price,
+    prevPrice: s.prevPrice,
     trend: s.trend,
     history: s.history,
   }));
@@ -105,7 +107,8 @@ export function restoreStocks(saved: SavedStock[] | undefined): StockState[] | n
       return {
         def,
         price: s.price,
-        prevPrice: s.price,
+        // 직전 가격까지 복원해 재접속 직후에도 등락률이 0%로 리셋되지 않게 함
+        prevPrice: typeof s.prevPrice === "number" ? s.prevPrice : s.price,
         trend: typeof s.trend === "number" ? s.trend : 0,
         history: s.history.slice(-HISTORY_LEN),
       };

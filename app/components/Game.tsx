@@ -292,7 +292,7 @@ export default function Game() {
         {/* 상단 바 */}
         <header className="pixel-panel px-4 py-2 flex items-center justify-between gap-3 shrink-0">
           <h1 className="text-xl font-bold text-gold tracking-widest whitespace-nowrap">
-            💊 도파민 뿜뿜 카지노
+            💰 한탕월드
           </h1>
           <div className="flex gap-x-5 text-sm whitespace-nowrap">
             <span>
