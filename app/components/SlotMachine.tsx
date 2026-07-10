@@ -197,7 +197,7 @@ export default function SlotMachine({ cash, onNet }: Props) {
           {floaters.map((f) => (
             <span
               key={f.id}
-              className={`float-up absolute left-1/2 -translate-x-1/2 top-2 text-2xl font-bold ${
+              className={`float-up absolute left-1/2 -translate-x-1/2 top-2 text-2xl font-bold whitespace-nowrap ${
                 f.gain ? "text-gain" : "text-loss"
               }`}
             >
