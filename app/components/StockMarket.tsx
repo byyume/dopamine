@@ -49,118 +49,133 @@ export default function StockMarket({
   const profit = holding ? (selected.price - holding.avgPrice) * holding.qty : 0;
 
   return (
-    <section className="pixel-panel p-4 flex flex-col gap-3">
-      <h2 className="text-xl font-bold text-info text-center tracking-widest">
+    <section className="pixel-panel p-3 flex-1 min-h-0 flex flex-col gap-2">
+      <h2 className="text-base font-bold text-info text-center tracking-widest shrink-0">
         📈 도파민 증권거래소 📉
       </h2>
 
-      <ul className="pixel-inset divide-y-2 divide-black/60 max-h-64 overflow-y-auto">
-        {stocks.map((s) => {
-          const ch =
-            s.prevPrice > 0 ? ((s.price - s.prevPrice) / s.prevPrice) * 100 : 0;
-          const h = holdings[s.def.id];
-          return (
-            <li key={s.def.id}>
-              <button
-                onClick={() => onSelect(s.def.id)}
-                className={`w-full flex items-center gap-2 px-3 py-2 text-left cursor-pointer ${
-                  s.def.id === selected.def.id ? "bg-white/10" : "hover:bg-white/5"
-                }`}
-              >
-                <span className="text-xl">{s.def.emoji}</span>
-                <span className="flex-1 min-w-0">
-                  <span className="block truncate">{s.def.name}</span>
-                  <span className={`text-xs ${RISK_COLOR[s.def.risk]}`}>
-                    [{RISK_LABEL[s.def.risk]}]
+      <div className="flex-1 min-h-0 flex gap-2">
+        {/* 종목 리스트 (내부 스크롤) */}
+        <ul className="pixel-inset divide-y-2 divide-black/60 overflow-y-auto w-72 shrink-0">
+          {stocks.map((s) => {
+            const ch =
+              s.prevPrice > 0 ? ((s.price - s.prevPrice) / s.prevPrice) * 100 : 0;
+            const h = holdings[s.def.id];
+            return (
+              <li key={s.def.id}>
+                <button
+                  onClick={() => onSelect(s.def.id)}
+                  className={`w-full flex items-center gap-1.5 px-2 py-1 text-left cursor-pointer ${
+                    s.def.id === selected.def.id ? "bg-white/10" : "hover:bg-white/5"
+                  }`}
+                >
+                  <span className="text-base">{s.def.emoji}</span>
+                  <span className="flex-1 min-w-0 text-xs">
+                    <span className="block truncate">{s.def.name}</span>
+                    <span className={`text-[10px] ${RISK_COLOR[s.def.risk]}`}>
+                      [{RISK_LABEL[s.def.risk]}]
+                    </span>
+                    {h && h.qty > 0 && (
+                      <span className="text-[10px] opacity-70"> {h.qty}주</span>
+                    )}
                   </span>
-                  {h && h.qty > 0 && (
-                    <span className="text-xs opacity-70"> 보유 {h.qty}주</span>
-                  )}
+                  <span className="text-right text-xs">
+                    <span className="block">{won(s.price)}</span>
+                    <span
+                      className={`text-[10px] ${ch >= 0 ? "text-gain" : "text-loss"}`}
+                    >
+                      {ch >= 0 ? "▲" : "▼"} {pct(ch)}
+                    </span>
+                  </span>
+                </button>
+              </li>
+            );
+          })}
+        </ul>
+
+        {/* 선택 종목 상세 + 거래 */}
+        <div className="flex-1 min-w-0 flex flex-col gap-1.5">
+          <div className="flex items-baseline justify-between shrink-0">
+            <h3 className="text-sm font-bold truncate">
+              {selected.def.emoji} {selected.def.name}
+              <span className={`ml-1 text-[10px] ${RISK_COLOR[selected.def.risk]}`}>
+                [{RISK_LABEL[selected.def.risk]}]
+              </span>
+            </h3>
+            <span
+              className={`text-sm whitespace-nowrap ${
+                changePct >= 0 ? "text-gain" : "text-loss"
+              }`}
+            >
+              {won(selected.price)} ({pct(changePct)})
+            </span>
+          </div>
+
+          <div className="flex-1 min-h-0">
+            <StockChart history={selected.history} gain={isGain} fill />
+          </div>
+
+          <p className="text-xs shrink-0 min-h-4">
+            {holding && holding.qty > 0 ? (
+              <>
+                보유 {holding.qty}주 · 평단 {won(holding.avgPrice)} · 손익{" "}
+                <span className={profit >= 0 ? "text-gain" : "text-loss"}>
+                  {signedWon(profit)}
                 </span>
-                <span className="text-right">
-                  <span className="block">{won(s.price)}</span>
-                  <span
-                    className={`text-xs ${ch >= 0 ? "text-gain" : "text-loss"}`}
+              </>
+            ) : (
+              <span className="opacity-50">보유 없음 · 시세는 10초마다 갱신</span>
+            )}
+          </p>
+
+          <div className="grid grid-cols-2 gap-2 shrink-0">
+            <div>
+              <p className="text-[11px] text-gain">매수 (최대 {maxBuy}주)</p>
+              <div className="flex gap-1.5">
+                {[1, 10].map((q) => (
+                  <button
+                    key={q}
+                    onClick={() => onBuy(selected.def.id, q)}
+                    disabled={maxBuy < q}
+                    className="pixel-btn bg-gain text-black font-bold px-2 py-1 text-xs flex-1 cursor-pointer"
                   >
-                    {ch >= 0 ? "▲" : "▼"} {pct(ch)}
-                  </span>
-                </span>
-              </button>
-            </li>
-          );
-        })}
-      </ul>
-
-      <div className="flex items-baseline justify-between">
-        <h3 className="text-lg font-bold">
-          {selected.def.emoji} {selected.def.name}
-          <span className={`ml-2 text-xs ${RISK_COLOR[selected.def.risk]}`}>
-            [{RISK_LABEL[selected.def.risk]}]
-          </span>
-        </h3>
-        <span className={changePct >= 0 ? "text-gain" : "text-loss"}>
-          {won(selected.price)} ({pct(changePct)})
-        </span>
-      </div>
-
-      <StockChart history={selected.history} gain={isGain} />
-
-      {holding && holding.qty > 0 && (
-        <p className="text-sm">
-          보유 {holding.qty}주 · 평단 {won(holding.avgPrice)} · 평가손익{" "}
-          <span className={profit >= 0 ? "text-gain" : "text-loss"}>
-            {signedWon(profit)}
-          </span>
-        </p>
-      )}
-
-      <div className="grid grid-cols-2 gap-3">
-        <div className="flex flex-col gap-2">
-          <p className="text-sm text-gain">매수 (최대 {maxBuy}주)</p>
-          <div className="flex gap-2">
-            {[1, 10].map((q) => (
-              <button
-                key={q}
-                onClick={() => onBuy(selected.def.id, q)}
-                disabled={maxBuy < q}
-                className="pixel-btn bg-gain text-black font-bold px-3 py-2 flex-1 cursor-pointer"
-              >
-                {q}주
-              </button>
-            ))}
-            <button
-              onClick={() => onBuy(selected.def.id, maxBuy)}
-              disabled={maxBuy < 1}
-              className="pixel-btn bg-gain text-black font-bold px-3 py-2 flex-1 cursor-pointer"
-            >
-              풀매수
-            </button>
-          </div>
-        </div>
-        <div className="flex flex-col gap-2">
-          <p className="text-sm text-loss">매도 (보유 {holding?.qty ?? 0}주)</p>
-          <div className="flex gap-2">
-            {[1, 10].map((q) => (
-              <button
-                key={q}
-                onClick={() => onSell(selected.def.id, q)}
-                disabled={!holding || holding.qty < q}
-                className="pixel-btn bg-loss text-white font-bold px-3 py-2 flex-1 cursor-pointer"
-              >
-                {q}주
-              </button>
-            ))}
-            <button
-              onClick={() => onSell(selected.def.id, holding?.qty ?? 0)}
-              disabled={!holding || holding.qty < 1}
-              className="pixel-btn bg-loss text-white font-bold px-3 py-2 flex-1 cursor-pointer"
-            >
-              전량
-            </button>
+                    {q}주
+                  </button>
+                ))}
+                <button
+                  onClick={() => onBuy(selected.def.id, maxBuy)}
+                  disabled={maxBuy < 1}
+                  className="pixel-btn bg-gain text-black font-bold px-2 py-1 text-xs flex-1 cursor-pointer"
+                >
+                  풀매수
+                </button>
+              </div>
+            </div>
+            <div>
+              <p className="text-[11px] text-loss">매도 (보유 {holding?.qty ?? 0}주)</p>
+              <div className="flex gap-1.5">
+                {[1, 10].map((q) => (
+                  <button
+                    key={q}
+                    onClick={() => onSell(selected.def.id, q)}
+                    disabled={!holding || holding.qty < q}
+                    className="pixel-btn bg-loss text-white font-bold px-2 py-1 text-xs flex-1 cursor-pointer"
+                  >
+                    {q}주
+                  </button>
+                ))}
+                <button
+                  onClick={() => onSell(selected.def.id, holding?.qty ?? 0)}
+                  disabled={!holding || holding.qty < 1}
+                  className="pixel-btn bg-loss text-white font-bold px-2 py-1 text-xs flex-1 cursor-pointer"
+                >
+                  전량
+                </button>
+              </div>
+            </div>
           </div>
         </div>
       </div>
-      <p className="text-xs opacity-60 text-center">시세는 10초마다 갱신됩니다</p>
     </section>
   );
 }

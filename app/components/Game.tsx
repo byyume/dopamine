@@ -1,15 +1,39 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import {
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+  useSyncExternalStore,
+} from "react";
 import SlotMachine from "./SlotMachine";
 import StockMarket, { Holding } from "./StockMarket";
 import LoanPanel, { Loan, LOAN_AMOUNT, INTEREST_TICK_MS } from "./LoanPanel";
-import { initStocks, tickStock, StockState, STOCK_TICK_MS, STOCK_DEFS } from "../lib/stocks";
+import {
+  initStocks,
+  tickStock,
+  StockState,
+  STOCK_TICK_MS,
+  STOCK_DEFS,
+} from "../lib/stocks";
 import { won, signedWon } from "../lib/format";
 import { sfx, setMuted } from "../lib/sound";
 
 const START_CASH = 10_000;
 const SAVE_KEY = "dopamine-save-v1";
+
+// 16:9 기준 논리 해상도 — iframe 크기에 맞춰 통째로 scale 됨
+const STAGE_W = 1280;
+const STAGE_H = 720;
+
+function subscribeResize(cb: () => void) {
+  window.addEventListener("resize", cb);
+  return () => window.removeEventListener("resize", cb);
+}
+const getScale = () =>
+  Math.min(window.innerWidth / STAGE_W, window.innerHeight / STAGE_H);
+const getServerScale = () => 1;
 
 interface LogEntry {
   id: number;
@@ -34,7 +58,11 @@ export default function Game() {
   const [log, setLog] = useState<LogEntry[]>([]);
   const [muted, setMutedState] = useState(false);
   const [loaded, setLoaded] = useState(false);
+  const [resetArmed, setResetArmed] = useState(false);
   const logId = useRef(0);
+  const resetTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const scale = useSyncExternalStore(subscribeResize, getScale, getServerScale);
 
   const addLog = useCallback((text: string, tone: LogEntry["tone"]) => {
     setLog((prev) => [{ id: ++logId.current, text, tone }, ...prev].slice(0, 8));
@@ -185,8 +213,16 @@ export default function Game() {
     sfx.sell();
   }
 
-  function reset() {
-    if (!confirm("정말 파산 신청하고 처음부터 다시 시작할까요?")) return;
+  // 팝업(confirm) 금지 규격 대응: 두 번 클릭으로 확정하는 인라인 리셋
+  function handleReset() {
+    if (!resetArmed) {
+      setResetArmed(true);
+      if (resetTimer.current) clearTimeout(resetTimer.current);
+      resetTimer.current = setTimeout(() => setResetArmed(false), 3000);
+      return;
+    }
+    if (resetTimer.current) clearTimeout(resetTimer.current);
+    setResetArmed(false);
     setCash(START_CASH);
     setStocks(initStocks());
     setHoldings({});
@@ -210,112 +246,112 @@ export default function Game() {
   const totalDebt = loans.reduce((s, l) => s + l.balance, 0);
   const netWorth = cash + stockValue - totalDebt;
   const nextRate = Math.pow(2, loanSeq);
-  const broke = cash < 10 && stockValue === 0;
 
   return (
-    <main className="max-w-7xl w-full mx-auto p-4 flex flex-col gap-4">
-      <header className="pixel-panel p-4 flex flex-wrap items-center justify-between gap-3">
-        <h1 className="text-2xl font-bold text-gold tracking-widest">
-          💊 도파민 뿜뿜 카지노
-        </h1>
-        <div className="flex flex-wrap gap-x-6 gap-y-1 text-sm sm:text-base">
-          <span>
-            💰 현금: <b className="text-gold">{won(cash)}</b>
-          </span>
-          <span>
-            📊 주식: <b className="text-info">{won(stockValue)}</b>
-          </span>
-          <span>
-            🏚️ 부채:{" "}
-            <b className={totalDebt > 0 ? "text-loss" : "text-gain"}>
-              {won(totalDebt)}
-            </b>
-          </span>
-          <span>
-            👑 순자산:{" "}
-            <b className={netWorth >= 0 ? "text-gain" : "text-loss"}>
-              {won(netWorth)}
-            </b>
-          </span>
-        </div>
-        <div className="flex gap-2">
-          <button
-            onClick={toggleMute}
-            className="pixel-btn bg-panel-dark px-3 py-1 cursor-pointer"
-            aria-label={muted ? "소리 켜기" : "소리 끄기"}
-          >
-            {muted ? "🔇" : "🔊"}
-          </button>
-          <button
-            onClick={reset}
-            className="pixel-btn bg-panel-dark px-3 py-1 cursor-pointer"
-          >
-            파산 리셋
-          </button>
-        </div>
-      </header>
+    <div className="fixed inset-0 flex items-center justify-center overflow-hidden">
+      <div
+        className="flex flex-col gap-2 p-3 shrink-0"
+        style={{
+          width: STAGE_W,
+          height: STAGE_H,
+          transform: `scale(${scale})`,
+        }}
+      >
+        {/* 상단 바 */}
+        <header className="pixel-panel px-4 py-2 flex items-center justify-between gap-3 shrink-0">
+          <h1 className="text-xl font-bold text-gold tracking-widest whitespace-nowrap">
+            💊 도파민 뿜뿜 카지노
+          </h1>
+          <div className="flex gap-x-5 text-sm whitespace-nowrap">
+            <span>
+              💰 현금: <b className="text-gold">{won(cash)}</b>
+            </span>
+            <span>
+              📊 주식: <b className="text-info">{won(stockValue)}</b>
+            </span>
+            <span>
+              🏚️ 부채:{" "}
+              <b className={totalDebt > 0 ? "text-loss" : "text-gain"}>
+                {won(totalDebt)}
+              </b>
+            </span>
+            <span>
+              👑 순자산:{" "}
+              <b className={netWorth >= 0 ? "text-gain" : "text-loss"}>
+                {won(netWorth)}
+              </b>
+            </span>
+          </div>
+          <div className="flex gap-2 shrink-0">
+            <button
+              onClick={toggleMute}
+              className="pixel-btn bg-panel-dark px-3 py-1 cursor-pointer"
+              aria-label={muted ? "소리 켜기" : "소리 끄기"}
+            >
+              {muted ? "🔇" : "🔊"}
+            </button>
+            <button
+              onClick={handleReset}
+              className={`pixel-btn px-3 py-1 cursor-pointer ${
+                resetArmed ? "bg-loss text-white font-bold" : "bg-panel-dark"
+              }`}
+            >
+              {resetArmed ? "정말로?!" : "파산 리셋"}
+            </button>
+          </div>
+        </header>
 
-      {broke && (
-        <p className="pixel-panel p-3 text-center text-loss font-bold">
-          💸 탕진했습니다... 아래에서 대출을 받아 재기하세요!
-        </p>
-      )}
+        {/* 본문: 슬롯(좌) / 주식(우) */}
+        <div className="flex-1 min-h-0 grid grid-cols-[460px_1fr] gap-2">
+          <div className="flex flex-col gap-2 min-h-0">
+            <SlotMachine cash={cash} onNet={handleSlotNet} />
+            <LoanPanel
+              loans={loans}
+              nextRate={nextRate}
+              cash={cash}
+              onBorrow={borrow}
+              onRepay={repay}
+            />
+          </div>
 
-      <div className="grid md:grid-cols-2 gap-4 items-start">
-        {/* 왼쪽: 슬롯머신 + 대출 */}
-        <div className="flex flex-col gap-4">
-          <SlotMachine cash={cash} onNet={handleSlotNet} />
-          <LoanPanel
-            loans={loans}
-            nextRate={nextRate}
-            cash={cash}
-            onBorrow={borrow}
-            onRepay={repay}
-          />
-        </div>
-
-        {/* 오른쪽: 주식창 + 속보 — 슬롯과 실시간으로 같이 보며 플레이 */}
-        <div className="flex flex-col gap-4">
-          <StockMarket
-            stocks={stocks}
-            holdings={holdings}
-            cash={cash}
-            selectedId={selectedId}
-            onSelect={setSelectedId}
-            onBuy={buy}
-            onSell={sell}
-          />
-          <section className="pixel-panel p-4">
-          <h2 className="text-xl font-bold text-center tracking-widest mb-2">
-            📰 속보
-          </h2>
-          <ul className="pixel-inset px-3 py-2 min-h-24 text-sm flex flex-col gap-1">
-            {log.length === 0 && (
-              <li className="opacity-50">아직 소식이 없습니다...</li>
-            )}
-            {log.map((e) => (
-              <li
-                key={e.id}
-                className={
-                  e.tone === "gain"
-                    ? "text-gain"
-                    : e.tone === "loss"
-                      ? "text-loss"
-                      : "text-info"
-                }
-              >
-                {e.text}
-              </li>
-            ))}
-          </ul>
-          </section>
+          <div className="flex flex-col gap-2 min-h-0">
+            <StockMarket
+              stocks={stocks}
+              holdings={holdings}
+              cash={cash}
+              selectedId={selectedId}
+              onSelect={setSelectedId}
+              onBuy={buy}
+              onSell={sell}
+            />
+            <section className="pixel-panel px-3 py-2 h-24 shrink-0 flex flex-col">
+              <h2 className="text-sm font-bold tracking-widest shrink-0">📰 속보</h2>
+              <ul className="flex-1 min-h-0 overflow-hidden text-xs flex flex-col gap-0.5">
+                {log.length === 0 && (
+                  <li className="opacity-50">아직 소식이 없습니다...</li>
+                )}
+                {log.slice(0, 3).map((e) => (
+                  <li
+                    key={e.id}
+                    className={
+                      e.tone === "gain"
+                        ? "text-gain"
+                        : e.tone === "loss"
+                          ? "text-loss"
+                          : "text-info"
+                    }
+                  >
+                    {e.text}
+                  </li>
+                ))}
+              </ul>
+              <p className="text-[10px] opacity-40 shrink-0">
+                본 게임은 가상 화폐로만 진행되며 실제 도박·투자와 무관합니다.
+              </p>
+            </section>
+          </div>
         </div>
       </div>
-
-      <footer className="text-center text-xs opacity-50 pb-4">
-        본 게임은 가상 화폐로만 진행되며 실제 도박·투자와 무관합니다. 건전한
-        도파민 생활 하세요!
-      </footer>
-    </main>
+    </div>
   );
 }

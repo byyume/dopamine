@@ -5,13 +5,23 @@ interface Props {
   width?: number;
   height?: number;
   gain: boolean;
+  fill?: boolean; // 부모 영역을 가득 채움
 }
 
-export default function StockChart({ history, width = 320, height = 120, gain }: Props) {
+export default function StockChart({
+  history,
+  width = 320,
+  height = 140,
+  gain,
+  fill = false,
+}: Props) {
   if (history.length < 2) {
     return (
-      <div className="pixel-inset flex items-center justify-center" style={{ height }}>
-        <span className="opacity-60 text-sm">데이터 수집 중...</span>
+      <div
+        className={`pixel-inset flex items-center justify-center ${fill ? "w-full h-full" : ""}`}
+        style={fill ? undefined : { height }}
+      >
+        <span className="opacity-60 text-xs">데이터 수집 중...</span>
       </div>
     );
   }
@@ -36,8 +46,9 @@ export default function StockChart({ history, width = 320, height = 120, gain }:
   return (
     <svg
       viewBox={`0 0 ${width} ${height}`}
-      className="pixel-inset w-full"
-      style={{ height }}
+      preserveAspectRatio={fill ? "none" : "xMidYMid meet"}
+      className={`pixel-inset w-full ${fill ? "h-full" : ""}`}
+      style={fill ? undefined : { height }}
       shapeRendering="crispEdges"
       role="img"
       aria-label="주가 차트"
@@ -47,6 +58,7 @@ export default function StockChart({ history, width = 320, height = 120, gain }:
         fill="none"
         stroke={color}
         strokeWidth={3}
+        vectorEffect="non-scaling-stroke"
       />
     </svg>
   );
