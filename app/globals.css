@@ -135,15 +135,18 @@ body::after {
   animation: reel-spin 0.18s linear infinite;
 }
 
-/* 슬롯머신 레버: 받침대(아래)를 축으로 회전하며 당겨졌다 돌아옴 */
+/* 슬롯머신 레버: 살짝 비스듬한 3/4 시점(2.5D)으로 세워두고,
+   받침대(아래)를 축으로 앞으로 꺾였다 돌아오는 입체 연출 */
 .lever-arm {
   transform-origin: bottom center;
+  transform-style: preserve-3d;
+  transform: rotateY(-24deg) rotate(0deg);
 }
 @keyframes lever-pull {
-  0% { transform: rotate(0deg); }
-  30% { transform: rotate(72deg); }
-  55% { transform: rotate(72deg); }
-  100% { transform: rotate(0deg); }
+  0%   { transform: rotateY(-24deg) rotateX(0deg)  rotate(0deg); }
+  28%  { transform: rotateY(-24deg) rotateX(22deg) rotate(66deg); }
+  52%  { transform: rotateY(-24deg) rotateX(22deg) rotate(66deg); }
+  100% { transform: rotateY(-24deg) rotateX(0deg)  rotate(0deg); }
 }
 .lever-pulling {
   animation: lever-pull 0.5s ease-in-out;

@@ -206,26 +206,50 @@ export default function SlotMachine({ cash, onNet }: Props) {
           ))}
         </div>
 
-        {/* 슬롯머신 레버 — 당기면 아래로 내려가는 연출 */}
+        {/* 슬롯머신 레버 — 2.5D 원근 + 구체/실린더 음영, 당기면 입체적으로 꺾임 */}
         <button
           onClick={handleSpin}
           disabled={busy || cash < cost}
           aria-label="레버를 당겨 스핀"
-          className="group relative flex flex-col items-center justify-end w-16 shrink-0 cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
+          className="group relative flex flex-col items-center justify-end w-20 shrink-0 cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
         >
-          {/* 레버 트랙 */}
-          <div className="absolute bottom-4 top-2 w-2.5 bg-panel-dark border-2 border-black rounded-full" />
-          {/* 회전하는 레버 팔(공+막대) */}
-          <div
-            className={`lever-arm absolute bottom-4 flex flex-col items-center ${
-              leverPulling ? "lever-pulling" : ""
-            }`}
-          >
-            <span className="w-7 h-7 rounded-full bg-loss border-4 border-black shadow-[inset_-2px_-2px_0_rgba(0,0,0,0.35)]" />
-            <span className="w-2.5 h-24 bg-gradient-to-b from-[#c9ccd6] to-[#6b6f7d] border-2 border-black -mt-1" />
+          {/* 원근 무대 */}
+          <div className="relative flex-1 w-full flex items-end justify-center [perspective:520px]">
+            {/* 뒤쪽 가이드 슬롯(홈) */}
+            <div className="absolute bottom-2 top-2 w-3 rounded-full bg-gradient-to-r from-black via-[#241a3d] to-black border-2 border-black" />
+            {/* 회전하는 레버 팔(공+막대) — bottom pivot 중심으로 회전 */}
+            <div
+              className={`lever-arm relative mb-2 flex flex-col items-center ${
+                leverPulling ? "lever-pulling" : ""
+              }`}
+            >
+              {/* 손잡이 공(구체) */}
+              <span
+                className="relative w-9 h-9 rounded-full border-[3px] border-black shadow-[3px_5px_0_rgba(0,0,0,0.35)]"
+                style={{
+                  background:
+                    "radial-gradient(circle at 34% 28%, #ffb3c1 0%, #ff5d7a 42%, #d02347 72%, #8f1a34 100%)",
+                }}
+              >
+                <span className="absolute left-1.5 top-1.5 w-2.5 h-2.5 rounded-full bg-white/85 blur-[0.5px]" />
+              </span>
+              {/* 금속 막대(실린더) */}
+              <span
+                className="w-3 h-20 border-2 border-black -mt-1 rounded-b-sm"
+                style={{
+                  background:
+                    "linear-gradient(90deg,#3f434f 0%,#8b90a0 26%,#f2f4fb 50%,#8b90a0 74%,#3f434f 100%)",
+                }}
+              />
+            </div>
           </div>
-          {/* 받침대 */}
-          <div className="relative z-10 w-14 h-4 bg-panel-dark border-2 border-black rounded-sm" />
+          {/* 받침대(입체 마운트) */}
+          <div className="relative z-10 flex flex-col items-center -mt-0.5">
+            {/* 윗면(밝음) */}
+            <div className="w-16 h-2.5 rounded-[50%] bg-gradient-to-b from-[#5a5478] to-[#2c2247] border-2 border-black" />
+            {/* 몸통(어두움 + 측면 음영) */}
+            <div className="w-12 h-3 -mt-1 border-2 border-t-0 border-black rounded-b-md bg-gradient-to-b from-[#241a3d] to-[#0f0a1e] shadow-[inset_-3px_0_0_rgba(0,0,0,0.4)]" />
+          </div>
           <span className="mt-1 text-xs font-bold text-loss whitespace-nowrap">
             {busy ? "두근두근" : won(cost)}
           </span>
