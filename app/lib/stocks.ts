@@ -1,4 +1,4 @@
-export const STOCK_TICK_MS = 10_000;
+export const STOCK_TICK_MS = 7_000;
 export const HISTORY_LEN = 40;
 
 export interface StockDef {

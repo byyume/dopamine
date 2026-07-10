@@ -1,5 +1,5 @@
 export const BASE_BET = 100;
-export const BET_MULTIPLIERS = [1, 2, 5, 10] as const;
+export const BET_MULTIPLIERS = [1, 2, 5, 10, 100, 1000] as const;
 
 export interface SlotSymbol {
   id: string;

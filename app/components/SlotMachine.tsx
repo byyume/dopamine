@@ -33,7 +33,7 @@ function SymbolFace({ sym, size }: { sym: SlotSymbol; size: "cell" | "small" }) 
   if (sym.id === "toki") {
     return (
       <TokiSprite
-        className={size === "cell" ? "w-11 h-9" : "w-4 h-3 inline-block"}
+        className={size === "cell" ? "w-11 h-10" : "w-4 h-3.5 inline-block"}
       />
     );
   }
@@ -150,7 +150,7 @@ export default function SlotMachine({ cash, onNet }: Props) {
       }`}
     >
       <h2 className="text-base font-bold text-gold text-center tracking-widest shrink-0">
-        🎰 토키 도파민 슬롯 🎰
+        🎰 애니팜팜 슬롯 🎰
       </h2>
 
       <div className="relative shrink-0">

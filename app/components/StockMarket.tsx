@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import { StockState, RISK_LABEL } from "../lib/stocks";
 import { won, pct, signedWon } from "../lib/format";
 import StockChart from "./StockChart";
@@ -36,6 +37,12 @@ export default function StockMarket({
   onBuy,
   onSell,
 }: Props) {
+  const [view, setView] = useState<"all" | "mine">("all");
+  const visibleStocks =
+    view === "mine"
+      ? stocks.filter((s) => (holdings[s.def.id]?.qty ?? 0) > 0)
+      : stocks;
+
   const selected = stocks.find((s) => s.def.id === selectedId) ?? stocks[0];
   const holding = holdings[selected.def.id];
   const changePct =
@@ -76,8 +83,32 @@ export default function StockMarket({
 
       <div className="flex-1 min-h-0 flex gap-2">
         {/* 종목 리스트 (내부 스크롤) */}
-        <ul className="pixel-inset divide-y-2 divide-black/60 overflow-y-auto w-72 shrink-0">
-          {stocks.map((s) => {
+        <div className="w-72 shrink-0 flex flex-col gap-1 min-h-0">
+          <div className="flex gap-1 shrink-0">
+            <button
+              onClick={() => setView("all")}
+              className={`pixel-btn flex-1 px-2 py-0.5 text-[11px] cursor-pointer ${
+                view === "all" ? "bg-info text-black font-bold" : "bg-panel-dark"
+              }`}
+            >
+              전체 종목
+            </button>
+            <button
+              onClick={() => setView("mine")}
+              className={`pixel-btn flex-1 px-2 py-0.5 text-[11px] cursor-pointer ${
+                view === "mine" ? "bg-info text-black font-bold" : "bg-panel-dark"
+              }`}
+            >
+              내 보유 주식
+            </button>
+          </div>
+          <ul className="pixel-inset divide-y-2 divide-black/60 overflow-y-auto flex-1 min-h-0">
+          {visibleStocks.length === 0 && (
+            <li className="px-2 py-3 text-xs opacity-50 text-center">
+              보유한 주식이 없습니다
+            </li>
+          )}
+          {visibleStocks.map((s) => {
             const ch =
               s.prevPrice > 0 ? ((s.price - s.prevPrice) / s.prevPrice) * 100 : 0;
             const h = holdings[s.def.id];
@@ -111,7 +142,8 @@ export default function StockMarket({
               </li>
             );
           })}
-        </ul>
+          </ul>
+        </div>
 
         {/* 선택 종목 상세 + 거래 */}
         <div className="flex-1 min-w-0 flex flex-col gap-1.5">
@@ -144,7 +176,7 @@ export default function StockMarket({
                 </span>
               </>
             ) : (
-              <span className="opacity-50">보유 없음 · 시세는 10초마다 갱신</span>
+              <span className="opacity-50">보유 없음 · 시세는 7초마다 갱신</span>
             )}
           </p>
 
